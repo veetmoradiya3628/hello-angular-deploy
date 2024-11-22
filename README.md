@@ -25,3 +25,32 @@ Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To u
 ## Further help
 
 To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+## Steps to build & deploy Angular App
+
+- build a docker image locally with gcr tag and information
+
+```
+docker build -t gcr.io/<your-project-id>/<image-name>:<tag> .
+```
+
+- Push the image to GCR or Artifact Registry
+
+Authenticate Docker with GCP
+```
+gcloud auth configure-docker
+```
+
+Push the image to GCR
+```
+docker push gcr.io/<your-project-id>/<image-name>:<tag>
+```
+
+- Deploy the image to the cloud run
+```
+gcloud run deploy <service-name> \
+  --image gcr.io/<your-project-id>/<image-name>:<tag> \
+  --platform managed \
+  --region <region> \
+  --allow-unauthenticated
+```
