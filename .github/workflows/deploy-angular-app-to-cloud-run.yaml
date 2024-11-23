@@ -1,0 +1,47 @@
+name: Deploy Angular App To Cloud Run
+on:
+  push:
+    branches:
+    - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    # check out the code
+    - name: checkout code
+      uses: actions/checkout@v3
+
+    # Authenticate with Google cloud
+    - name: Authenticate with Google cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+    # Set up google cloud SDK
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+    # Authenticate Docker with GCR
+    - name: Authenticate Docker with GCR
+      run: |
+        gcloud auth configure-docker
+
+    # Build and Push Docker Image to GCR
+    - name: Build and Push Docker Image to GCR
+      run: |
+        IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/hello-angular-deployment"
+        docker build -t $IMAGE_NAME .
+        docker push $IMAGE_NAME
+
+    # Deploy to Cloud Run
+    - name: Deploy to Cloud Run
+      run: |
+        IMAGE_NAME="gcr.io/${{ secrets.GCP_PROJECT_ID }}/hello-angular-deployment"
+        gcloud run deploy hello-node-backend \
+          --image $IMAGE_NAME \
+          --platform managed \
+          --region asia-south1 \
+          --allow-unauthenticated \
+          --memory 512Mi
